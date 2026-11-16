@@ -6,7 +6,7 @@ by [towncrier](https://towncrier.readthedocs.io) from the fragments in
 
 <!-- towncrier release notes start -->
 
-## [0.1.0] - 2026-11-03
+## [0.1.0] - 2026-11-16
 
 First release. The bot replaces the Jira Slack plugin for SVAB notifications,
 adding threads under each announcement.
@@ -25,6 +25,9 @@ adding threads under each announcement.
 - Added `SVAB_BOT_ANNOUNCE_SINCE`, a cutover guard: tickets that entered In Review before the cutover (according to the Jira changelog) were announced by the old plugin and are not announced again. Tickets that went through review after the cutover without being announced are logged as a warning instead of being announced late.
 - Added a reconciler that catches up on events missed while the bot was down: at startup and every `SVAB_BOT_RECONCILE_INTERVAL_MINUTES` (default 15), it checks every SVAB ticket updated in the last `SVAB_BOT_RECONCILE_LOOKBACK_HOURS` (default 72).
 - Status changes of announced tickets (approved, done, rolled back, cancelled, rework, resubmitted) are posted as replies in the ticket's thread, with an emoji per status. Replies go to the channel the thread is in, even if the configured channel has changed since.
+- Added `SVAB_BOT_JIRA_BASIC_CREDENTIALS`, to give the Jira email and API token as one base64-encoded `email:token` value.
+- Added `SVAB_BOT_PATH_PREFIX`, to serve the bot under a path such as `/svab-slack-bot` behind an ingress.
+- Moved the webhook secret from `Authorization: Bearer` to the `X-Svab-Bot-Secret` header, so the bot can run behind an ingress that uses `Authorization` for its own tokens.
 
 ### Documentation
 
