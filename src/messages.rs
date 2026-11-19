@@ -16,19 +16,38 @@ pub struct Mentions {
 /// The main post announcing a request that is ready for review.
 pub fn announcement(issue: &Issue, mentions: &Mentions) -> String {
     let (emoji, level) = match issue.level {
+        Some(Level::NoRestriction) => (":large_green_circle:", "NO RESTRICTION"),
+        Some(Level::Information) => (":large_yellow_circle:", "INFORMATION"),
         Some(Level::Consultation) => (":large_blue_circle:", "CONSULTATION"),
         Some(Level::Critical) => (":red_circle:", "CRITICAL"),
         None => (":white_circle:", "UNKNOWN LEVEL"),
     };
-    format!(
-        "{emoji} *{level}*: <!subteam^{approvers}> (attn <!subteam^{main}>) SVAB request ready for review (:thread:).\n\n\
+    if issue.level == Some(Level::NoRestriction) {
+        format!(
+            "{emoji} *{level}*: <{url}|{key}>: {summary}",
+            url = issue.url,
+            key = issue.key,
+            summary = escape(&issue.summary),
+        )
+    } else if issue.level == Some(Level::Information) {
+        format!(
+            "{emoji} *{level}*: <{url}|{key}>: {summary} (attn <!subteam^{main}>)",
+            main = mentions.main_group_id,
+            url = issue.url,
+            key = issue.key,
+            summary = escape(&issue.summary),
+        )
+    } else {
+        format!(
+            "{emoji} *{level}*: <!subteam^{approvers}> (attn <!subteam^{main}>) SVAB request ready for review (:thread:).\n\n\
         <{url}|{key}>: {summary}",
-        approvers = mentions.approvers_group_id,
-        main = mentions.main_group_id,
-        url = issue.url,
-        key = issue.key,
-        summary = escape(&issue.summary),
-    )
+            approvers = mentions.approvers_group_id,
+            main = mentions.main_group_id,
+            url = issue.url,
+            key = issue.key,
+            summary = escape(&issue.summary),
+        )
+    }
 }
 
 /// First reply in the thread: the key facts reviewers look for.
@@ -39,21 +58,32 @@ pub fn details(issue: &Issue) -> String {
     } else {
         issue.change_contents.join(", ")
     };
-    format!(
+    let details = format!(
         "Details for {key}\n\
          - Type: {work_type}\n\
          - Requester: {requester}\n\
          - Planned deployment: {planned}\n\
          - Change contents: {contents}\n\
-         - BTS testing: {bts}\n\n\
-         All board members must approve. Discussion should happen in this thread. \
-         Approvals must happen directly in the ticket.",
+         - BTS testing: {bts}\n\n",
         work_type = escape(&issue.work_type),
         requester = escape(&issue.requester),
         key = issue.key,
         planned = escape(planned),
         contents = escape(&contents),
         bts = bts_status(&issue.labels),
+    );
+
+    if issue.level == Some(Level::NoRestriction) || issue.level == Some(Level::Information) {
+        return format!(
+            "{details}\
+            No action required."
+        );
+    }
+
+    format!(
+        "{details}\
+        All board members must approve. Discussion should happen in this thread. \
+         Approvals must happen directly in the ticket.",
     )
 }
 
@@ -127,6 +157,28 @@ mod tests {
             ..example_issue()
         };
         assert!(announcement(&issue, &mentions()).starts_with(":red_circle: *CRITICAL*"));
+    }
+
+    #[test]
+    fn announcement_shows_information_level() {
+        let issue = Issue {
+            level: Some(Level::Information),
+            ..example_issue()
+        };
+        assert!(
+            announcement(&issue, &mentions()).starts_with(":large_yellow_circle: *INFORMATION*")
+        );
+    }
+
+    #[test]
+    fn announcement_shows_no_restriction_level() {
+        let issue = Issue {
+            level: Some(Level::NoRestriction),
+            ..example_issue()
+        };
+        assert!(
+            announcement(&issue, &mentions()).starts_with(":large_green_circle: *NO RESTRICTION*")
+        );
     }
 
     #[test]
