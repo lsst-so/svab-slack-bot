@@ -6,6 +6,13 @@ by [towncrier](https://towncrier.readthedocs.io) from the fragments in
 
 <!-- towncrier release notes start -->
 
+## [v0.2.0] - 2026-11-20
+
+### Features
+
+- Add support for the No Restriction and Information SVAB levels.
+
+
 ## [0.1.0] - 2026-11-16
 
 First release. The bot replaces the Jira Slack plugin for SVAB notifications,
