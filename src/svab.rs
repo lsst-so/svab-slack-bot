@@ -66,6 +66,8 @@ impl From<Status> for String {
 /// Restriction level of a request, taken from the ticket's Jira priority.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Level {
+    NoRestriction,
+    Information,
     Consultation,
     Critical,
 }
@@ -74,6 +76,8 @@ impl Level {
     /// Map a Jira priority name ("SVAB Consultation", "SVAB Critical").
     pub fn from_priority(name: &str) -> Option<Self> {
         match name.to_ascii_lowercase().as_str() {
+            "svab no restriction" => Some(Self::NoRestriction),
+            "svab information" => Some(Self::Information),
             "svab consultation" => Some(Self::Consultation),
             "svab critical" => Some(Self::Critical),
             _ => None,
